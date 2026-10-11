@@ -1,0 +1,510 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tired at Work: Does Your Postcode Matter?</title>
+<meta name="description" content="Emotional exhaustion at work in Basel-Stadt, Ticino and Aargau, based on the Swiss Health Survey 2022. A student data story.">
+<style>
+:root{
+  --yellow:#FDC300; --black:#000; --ink:#1a1a1a; --grey:#6b6b6b; --light:#efefef; --line:#d4d4d4; --white:#fff;
+  --men:#9a9a9a;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--white);color:var(--ink);
+  font:400 19px/1.6 "Helvetica Neue",Helvetica,Arial,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--black);outline-offset:3px}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+h1,h2,h3{font-weight:800;letter-spacing:-.025em;line-height:1.02;margin:0}
+p{margin:0 0 1em;max-width:62ch}
+.skip{position:absolute;left:-999px}
+.skip:focus{left:8px;top:8px;background:var(--black);color:#fff;padding:8px 12px;z-index:99}
+
+/* nav */
+header.nav{position:sticky;top:0;z-index:20;background:var(--black);color:#fff}
+header.nav .wrap{display:flex;align-items:center;gap:20px;height:52px;overflow-x:auto;white-space:nowrap}
+header.nav strong{background:var(--yellow);color:#000;padding:4px 10px;font-weight:800;letter-spacing:-.01em}
+header.nav a{text-decoration:none;font-size:15px;color:#d8d8d8}
+header.nav a:hover{color:var(--yellow)}
+
+/* hero */
+.hero{background:var(--yellow);color:#000;padding:72px 0 80px}
+.people{display:flex;gap:clamp(8px,2vw,22px);margin:0 0 40px}
+.people svg{width:clamp(44px,9vw,104px);height:auto;display:block}
+.person .fill{fill:transparent;stroke:#000;stroke-width:3;transition:fill .6s}
+.person.on .fill{fill:#000}
+.hero h1{font-size:clamp(52px,10.5vw,148px);letter-spacing:-.045em;line-height:.92}
+.hero .lead{font-size:clamp(21px,2.6vw,30px);line-height:1.3;font-weight:500;max-width:30ch;margin:28px 0 0}
+.hero .ask{margin-top:44px;font-size:clamp(24px,3.2vw,40px);font-weight:800;letter-spacing:-.02em;max-width:22ch;line-height:1.08}
+
+/* sections */
+section.s{padding:96px 0;border-top:1px solid var(--line)}
+section.s.dark{background:var(--black);color:#fff;border:0}
+section.s.grey{background:var(--light)}
+.cols{display:grid;grid-template-columns:5fr 7fr;gap:56px;align-items:start}
+.cols.rev{grid-template-columns:7fr 5fr}
+.big{font-size:clamp(72px,12vw,168px);font-weight:800;letter-spacing:-.05em;line-height:.9}
+.mark{background:var(--yellow);color:#000;padding:0 .12em}
+h2{font-size:clamp(34px,5vw,60px);margin-bottom:24px}
+.kicker{font-weight:700;color:var(--grey);margin-bottom:12px}
+.dark .kicker{color:#bdbdbd}
+.note{font-size:15px;color:var(--grey);max-width:60ch}
+.dark .note{color:#bdbdbd}
+.hyp{border-left:6px solid var(--yellow);padding:4px 0 4px 18px;margin:28px 0}
+.hyp b{display:block;margin-bottom:4px}
+
+/* charts: horizontal bars, scale 0 to 30 percent */
+.chart{position:relative;margin:8px 0 6px}
+.chart .rows{display:grid;gap:12px}
+.row{display:grid;grid-template-columns:132px 1fr;align-items:center;gap:14px}
+.row .lab{font-weight:700;font-size:17px;line-height:1.15}
+.track{position:relative;height:56px}
+.bar{height:100%;width:0;background:var(--black);display:flex;align-items:center;justify-content:flex-end;
+  padding-right:12px;color:#fff;font-weight:800;font-size:24px;letter-spacing:-.02em;
+  transition:width 1.1s cubic-bezier(.2,.7,.2,1)}
+.bar.y{background:var(--yellow);color:#000}
+.bar.m{background:var(--men)}
+.bar.w{background:var(--black)}
+.dark .bar{background:#fff;color:#000}
+.dark .bar.y{background:var(--yellow)}
+.base{position:absolute;top:-8px;bottom:-8px;left:calc(132px + 14px + (100% - 146px) * 20.9 / 30);
+  width:0;border-left:3px dashed currentColor;opacity:0;transition:opacity .8s .9s}
+.chart.in .base{opacity:1}
+.baselabel{position:absolute;top:-30px;left:calc(132px + 14px + (100% - 146px) * 20.9 / 30);transform:translateX(-50%);
+  font-size:14px;font-weight:700;white-space:nowrap;opacity:0;transition:opacity .8s .9s}
+.chart.in .baselabel{opacity:1}
+.chart{padding-top:30px}
+.legend{display:flex;gap:18px;flex-wrap:wrap;font-size:15px;margin-top:18px}
+.legend i{display:inline-block;width:14px;height:14px;margin-right:6px;vertical-align:-2px}
+
+/* aargau split */
+.split .rows{gap:0;transition:gap .8s .2s}
+.split.is-split .rows{gap:10px}
+.split .lab{opacity:1}
+.split .row.fem .lab,.split .row.mal .lab{transition:opacity .6s}
+.split:not(.is-split) .row.mal .lab{opacity:0}
+.split:not(.is-split) .bar span{opacity:0}
+.split .bar span{transition:opacity .5s .9s}
+.split:not(.is-split) .row.fem .bar:after{content:"19.5%";position:absolute;right:12px}
+.split .bar{position:relative}
+.split.is-split .bar:after{content:none!important}
+button.btn{font:inherit;font-weight:800;background:var(--black);color:#fff;border:0;padding:14px 22px;cursor:pointer;margin-top:22px}
+button.btn:hover{background:#333}
+.dark button.btn{background:var(--yellow);color:#000}
+
+/* stat blocks */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:0;margin:36px 0 12px;border-top:6px solid var(--black)}
+.stat{padding:22px 22px 8px 0}
+.stat .n{font-size:clamp(44px,6vw,76px);font-weight:800;letter-spacing:-.04em;line-height:1}
+.stat p{font-size:17px;margin-top:8px}
+
+table{border-collapse:collapse;width:100%;font-size:18px;margin:12px 0}
+th,td{text-align:left;padding:14px 14px 14px 0;border-bottom:1px solid var(--line);vertical-align:top}
+thead th{border-bottom:3px solid var(--black);font-size:16px}
+td.num,th.num{text-align:right;padding-right:0;font-variant-numeric:tabular-nums}
+td.num b{font-weight:800}
+
+ol.limits{list-style:none;padding:0;margin:28px 0 0;display:grid;gap:0}
+ol.limits li{font-size:clamp(22px,3vw,34px);font-weight:700;letter-spacing:-.015em;line-height:1.2;
+  padding:18px 0;border-top:1px solid #444}
+ol.limits li:last-child{border-bottom:1px solid #444}
+
+.quote{font-size:clamp(34px,6.2vw,84px);font-weight:800;letter-spacing:-.04em;line-height:.98;max-width:16ch}
+.sources ol{padding-left:1.2em;font-size:15px;color:#444}
+.sources li{margin-bottom:.5em;max-width:90ch;word-break:break-word}
+footer{background:var(--black);color:#bdbdbd;padding:40px 0;font-size:15px}
+footer strong{color:#fff}
+
+@media (max-width:820px){
+  body{font-size:18px}
+  .cols,.cols.rev{grid-template-columns:1fr;gap:28px}
+  section.s{padding:64px 0}
+  .row{grid-template-columns:1fr;gap:4px}
+  .base,.baselabel{left:calc(100% * 20.9 / 30)}
+  .bar{font-size:20px}
+  .track{height:48px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition:none!important;scroll-behavior:auto!important}
+}
+
+/* burnout definition */
+.dims{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:36px 0 22px}
+.dim{padding:22px 22px 20px;border:2px solid var(--black);background:var(--white);min-height:190px}
+.dim h3{font-size:22px;letter-spacing:-.015em;line-height:1.15;margin-bottom:10px}
+.dim p{font-size:17px;margin:0}
+.dim.on{background:var(--yellow)}
+.dim .tag{display:inline-block;margin-top:14px;font-weight:800;font-size:15px}
+.dim:not(.on){border-color:var(--line);color:var(--grey)}
+.dim:not(.on) h3{color:var(--ink)}
+@media (max-width:820px){.dims{grid-template-columns:1fr}.dim{min-height:0}}
+
+/* exhaustion chain */
+.chain{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin:40px 0 8px}
+.link{padding:22px 40px 22px 24px;background:var(--light);clip-path:polygon(0 0,calc(100% - 28px) 0,100% 50%,calc(100% - 28px) 100%,0 100%,0 0);margin-right:-14px}
+.link:first-child{background:var(--white);border:0;box-shadow:inset 0 0 0 0 #000;background:#d9d9d9}
+.link.hot{background:var(--yellow)}
+.link:last-child{clip-path:none;margin-right:0;background:var(--black);color:#fff}
+.link h3{font-size:21px;letter-spacing:-.015em;margin-bottom:6px}
+.link p{font-size:16px;margin:0}
+.why{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin:28px 0 0;border-top:6px solid var(--black)}
+.why .stat{padding-right:24px}
+@media (max-width:820px){.chain,.why{grid-template-columns:1fr}.link{clip-path:none;margin:0 0 8px;padding:18px}}
+
+/* personal voice with photo placeholder */
+.voice{display:grid;grid-template-columns:minmax(220px,340px) 1fr;gap:48px;align-items:center;margin-bottom:72px}
+.photo{position:relative;aspect-ratio:4/5;border:3px dashed #000;background:var(--yellow);display:flex;flex-direction:column;justify-content:flex-end;padding:18px;cursor:pointer;overflow:hidden}
+.photo svg{position:absolute;top:18px;left:18px;width:44px;height:44px}
+.photo .who{font-weight:800;font-size:20px;letter-spacing:-.015em;line-height:1.1;margin-bottom:8px}
+.photo .pose{font-size:15px;line-height:1.35;margin:0}
+.photo .pose b{font-weight:800}
+.photo .add{margin-top:12px;font-weight:800;font-size:14px;text-decoration:underline}
+.photo input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.photo.has-img{border-style:solid}
+.photo.has-img .who,.photo.has-img .pose,.photo.has-img .add,.photo.has-img svg{display:none}
+.voice .say{font-size:clamp(24px,3.2vw,38px);font-weight:700;letter-spacing:-.025em;line-height:1.2;max-width:24ch}
+.voice .say + p{margin-top:20px;max-width:56ch}
+.voice .todo{background:var(--yellow);padding:0 .2em;font-weight:700}
+@media (max-width:820px){.voice{grid-template-columns:1fr;gap:24px}.photo{max-width:340px}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="nav"><div class="wrap">
+  <strong>Tired at Work</strong>
+  <a href="#burnout">Burnout</a><a href="#baseline">Baseline</a><a href="#basel">Basel-Stadt</a><a href="#ticino">Ticino</a><a href="#aargau">Aargau</a><a href="#limits">Data limits</a><a href="#answer">Answer</a><a href="#sources">Sources</a>
+</div></header>
+
+<main id="main">
+<section class="hero">
+  <div class="wrap">
+    <div class="people" id="people" role="img" aria-label="Five people, one of them highlighted: one in five">
+    </div>
+    <h1>1 in 5</h1>
+    <p class="lead">working people in Switzerland say they feel emotionally exhausted.</p>
+    <p class="ask">Does it depend on where you live?</p>
+  </div>
+</section>
+
+<section class="s" id="burnout">
+  <div class="wrap cols">
+    <div>
+      <h2>What do we mean by exhaustion?</h2>
+    </div>
+    <div>
+      <p>Exhaustion is what chronic stress at work feels like after a while: the demands keep outrunning the energy you have to meet them, and rest no longer restores it. You are drained on Sunday evening, and a good night&rsquo;s sleep does not fix it.</p>
+      <p>If that persists, it can develop into burnout. Burnout is not a medical diagnosis. The WHO describes it in its international classification (ICD-11) as an occupational phenomenon: a syndrome that results from chronic stress at work that has not been successfully managed.</p>
+    </div>
+  </div>
+  <div class="wrap">
+    <div class="chain">
+      <div class="link"><h3>Chronic stress at work</h3><p>High demands, too few resources to cope with them.</p></div>
+      <div class="link hot"><h3>Emotional exhaustion</h3><p>Feeling drained. This is what the survey measures.</p></div>
+      <div class="link"><h3>Burnout</h3><p>When exhaustion lasts and the other two dimensions follow.</p></div>
+    </div>
+    <p class="note">Burnout has three dimensions: emotional exhaustion, mental distance from the job (negativity, cynicism) and reduced effectiveness. The Swiss Health Survey asks about the first one only. Federal statistics call it a warning signal for a high risk of burnout, but it is not burnout itself.</p>
+
+    <h2 style="font-size:clamp(28px,3.6vw,44px);margin-top:64px">Why it matters</h2>
+    <div class="why">
+      <div class="stat"><div class="n">53%</div><p>of workers who are stressed most or all of the time are also emotionally exhausted, against 13% of those who feel no stress.</p></div>
+      <div class="stat"><div class="n">27%</div><p>of exhausted workers show signs of moderate to severe depression, against 5% of the others.</p></div>
+      <div class="stat"><div class="n">6.5 bn</div><p>Swiss francs lost every year to stress at work, through absence and reduced performance. That is about 1% of Swiss economic output (estimate).</p></div>
+    </div>
+    <p class="note" style="margin-top:14px">Exhaustion is an early signal, so it is the place to look before burnout has set in, and it is the one dimension a national survey can compare across cantons. People who report it are not diagnosed with burnout. The first two figures come from the Federal Statistical Office, Swiss Health Survey 2022 (BFS Aktuell 2024), employed people aged 15 to 64. The cost figure is an estimate from the Job-Stress-Index of Gesundheitsf&ouml;rderung Schweiz. It covers productivity lost to stress at work, not to exhaustion alone. Counting disability insurance benefits as well, the total cost to society is put at around CHF 10 billion a year. A 2020 report gave a higher productivity estimate of CHF 7.6 billion.</p>
+  </div>
+</section>
+
+<section class="s" id="baseline">
+  <div class="wrap cols">
+    <div>
+      <div class="big">20.9%</div>
+    </div>
+    <div>
+      <h2>The Swiss baseline</h2>
+      <p>Every five years Switzerland runs a national health survey. In 2022, almost 11,000 working people were asked how their job affects them. This is not a doctor&rsquo;s opinion and not a burnout diagnosis. It is people reporting how worn out they feel.</p>
+      <p>Across Switzerland, 20.9 percent reported emotional exhaustion. Women report it more often than men: 23.9 percent against 18.2, a gap of 5.7 points.</p>
+    </div>
+  </div>
+  <div class="wrap" style="margin-top:56px">
+    <div class="chart" data-chart='[["All working people",20.9,"y"],["Women",23.9,"w"],["Men",18.2,"m"]]' data-base="1"></div>
+    <p class="note">Share of working people reporting emotional exhaustion. Dashed line: Swiss average, 20.9%. Source: Swiss Health Survey 2022 (Obsan).</p>
+  </div>
+</section>
+
+<section class="s grey" id="cantons">
+  <div class="wrap">
+    <h2>Three cantons, three very different places</h2>
+    <p>Basel-Stadt, Ticino and Aargau. One question: how exhausted are people at work, and does the answer depend on where they live?</p>
+    <div class="chart" style="margin-top:36px" data-chart='[["Basel-Stadt",25.4,"y"],["Ticino",20.5,"b"],["Aargau*",19.5,"b"]]' data-base="1"></div>
+    <p class="note">*Aargau value estimated from charts. Source: Swiss Health Survey 2022 (Obsan).</p>
+  </div>
+</section>
+
+<section class="s" id="basel">
+  <div class="wrap">
+    <div class="voice">
+      <label class="photo" title="Click to preview a photo from your computer">
+        <svg viewBox="0 0 48 48" fill="none" stroke="#000" stroke-width="3" aria-hidden="true"><rect x="4" y="12" width="40" height="28" rx="3"/><circle cx="24" cy="26" r="8"/><path d="M16 12l3-5h10l3 5"/></svg>
+        <span class="who">Photo: [Name], Basel</span>
+        <p class="pose"><b>Pose:</b> standing at a tram stop at rush hour, laptop bag over one shoulder, looking down the tracks as if the tram is late. Natural light, portrait, eye level.</p>
+        <span class="add">Click to add a preview</span>
+        <input type="file" accept="image/*" aria-label="Add photo of [Name] in Basel">
+      </label>
+      <div>
+        <p class="say">That&rsquo;s me, waiting for the tram. Around me are thousands of others on their way to work.</p>
+        <p>I&rsquo;m <span class="todo">[Name]</span>, and I&rsquo;ll take you to Basel-Stadt. <span class="todo">[One personal sentence: how your workday starts.]</span> It is a small city-canton, and it is where the number is highest.</p>
+      </div>
+    </div>
+  </div>
+  <div class="wrap cols rev">
+    <div>
+      <h2>Basel-Stadt: the highest of the three</h2>
+      <p>25.4 percent, one in four, and 4.5 points above the Swiss average. The survey cannot tell us why. But we can look at what working life in Basel is built on.</p>
+      <p>Basel is a hub for pharma and life sciences. About 200,000 people work in this small city-canton, and about 90,500 commute in every day: 36,000 from abroad and 54,500 from other cantons. High pay usually comes with high demands: responsibility, tight deadlines, being reachable. And work stress is rising across the country: in ten years the share of stressed workers went from 18 to 23 percent. And stress and exhaustion go together: among workers who are stressed most or all of the time, 53 percent also feel emotionally exhausted, against 13 percent of those who feel no stress.</p>
+      <p class="note">Two cautions. The survey asks people who live in Basel-Stadt, not everyone who works there. And it measures how exhausted people are, not why. These are features of Basel&rsquo;s working world, not proven causes.</p>
+    </div>
+    <div>
+      <div class="chart" data-chart='[["Switzerland",20.9,"b"],["Basel-Stadt",25.4,"y"]]' data-base="1"></div>
+    </div>
+  </div>
+
+  <div class="wrap" style="margin-top:72px">
+    <h2 style="font-size:clamp(30px,4vw,48px)">The twist: in Basel the gender pattern flips</h2>
+    <div class="cols" style="margin-top:20px">
+      <div>
+        <p>26.0 percent of men and 24.7 percent of women report emotional exhaustion. The difference is small, so handle it with care.</p>
+        <div class="hyp"><b>One hypothesis, not a finding</b>The same logic runs through this whole story: exhaustion depends on the total demands people carry. Across Switzerland, men&rsquo;s exhaustion hardly differs by age or industry, so the industry alone is unlikely to explain Basel. What may matter is how demanding the jobs are: Basel&rsquo;s well-paid pharma and life-science roles come with high responsibility, and full-time roles are held more often by men, 79 percent of working men against 42 percent of working women. If those demands fall more on men, they could close the usual gap or even reverse it. In Aargau the load sits elsewhere, on women who combine part-time work with most of the unpaid work at home. We cannot test this with our data.</div>
+      </div>
+      <div>
+        <div class="chart" data-chart='[["Women",24.7,"w"],["Men",26.0,"m"]]'></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="s grey" id="ticino">
+  <div class="wrap">
+    <div class="voice">
+      <label class="photo" title="Click to preview a photo from your computer">
+        <svg viewBox="0 0 48 48" fill="none" stroke="#000" stroke-width="3" aria-hidden="true"><rect x="4" y="12" width="40" height="28" rx="3"/><circle cx="24" cy="26" r="8"/><path d="M16 12l3-5h10l3 5"/></svg>
+        <span class="who">Photo: Kristina, Ticino</span>
+        <p class="pose"><b>Pose:</b> sitting at a lakeside caf&eacute; (Lugano or any spot on the water), both hands around a cup, looking out over the lake. Laptop closed beside you. Natural light, portrait, eye level.</p>
+        <span class="add">Click to add a preview</span>
+        <input type="file" accept="image/*" aria-label="Add photo of Kristina in Ticino">
+      </label>
+      <div>
+        <p class="say">From the Rhine we go south, to a break by the lake.</p>
+        <p>I&rsquo;m Kristina and I live in Ticino. <span class="todo">[One personal sentence: your own working day here.]</span> It looks like a postcard, but the working world behind it is a different one, and its number is almost exactly the Swiss average.</p>
+      </div>
+    </div>
+  </div>
+  <div class="wrap cols">
+    <div>
+      <div class="big">20.5%</div>
+      <p style="margin-top:18px;font-weight:700">Ticino sits level with Switzerland: 0.4 points below the average.</p>
+    </div>
+    <div>
+      <h2>Ticino: the same level from a different working world</h2>
+      <p>Exhaustion is largely a question of balance: how high the demands are and how many resources people have to cope with them. In Basel the demands come from responsibility and performance pressure. In Ticino they look different: the lowest wages in Switzerland and almost 79,000 cross-border workers, roughly three in ten jobs. Different pressures, similar result.</p>
+    </div>
+  </div>
+  <div class="wrap" style="margin-top:40px">
+    <table>
+      <thead><tr><th></th><th class="num">Ticino</th><th class="num">Switzerland</th></tr></thead>
+      <tbody>
+        <tr><td>Share exhausted at work</td><td class="num"><b>20.5%</b></td><td class="num">20.9%</td></tr>
+        <tr><td>Exhaustion gap, women vs men</td><td class="num"><b>2.1 points</b></td><td class="num">5.7 points</td></tr>
+        <tr><td>Median monthly wage</td><td class="num"><b>5,708 CHF</b></td><td class="num">7,024 CHF</td></tr>
+        <tr><td>Women working part-time</td><td class="num"><b>57.7%</b></td><td class="num">58.4%</td></tr>
+        <tr><td>Unexplained gender pay gap</td><td class="num"><b>11.1%</b></td><td class="num">7.0%</td></tr>
+      </tbody>
+    </table>
+    <p>The gender gap is small, 21.6 percent of women against 19.5 of men. We checked the obvious explanations: part-time work is about as common as elsewhere, and the pay gap is larger, not smaller. So why the gap is small, we do not know yet.</p>
+  </div>
+</section>
+
+<section class="s" id="aargau">
+  <div class="wrap">
+    <div class="voice">
+      <label class="photo" title="Click to preview a photo from your computer">
+        <svg viewBox="0 0 48 48" fill="none" stroke="#000" stroke-width="3" aria-hidden="true"><rect x="4" y="12" width="40" height="28" rx="3"/><circle cx="24" cy="26" r="8"/><path d="M16 12l3-5h10l3 5"/></svg>
+        <span class="who">Photo: Sina, Aargau</span>
+        <p class="pose"><b>Pose:</b> at your kitchen table in the evening: laptop open on one side, a plate of dinner or a pile of laundry on the other. Look at the camera, a little tired but calm. Warm indoor light, portrait.</p>
+        <span class="add">Click to add a preview</span>
+        <input type="file" accept="image/*" aria-label="Add photo of Sina in Aargau">
+      </label>
+      <div>
+        <p class="say">Same table, two kinds of work. And back home for me, in Aargau.</p>
+        <p>I&rsquo;m Sina, and I live near Aarau. <span class="todo">[One personal sentence: how paid and unpaid work share your evening.]</span> On paper, Aargau has the best number of the three. This picture is staged, but it shows the question behind it.</p>
+      </div>
+    </div>
+  </div>
+  <div class="wrap cols rev">
+    <div>
+      <h2>Aargau: the best number that isn&rsquo;t</h2>
+      <p>Around 19.5 percent: the lowest of the three cantons and below the Swiss average. If you stopped here, you would say Aargau is doing fine.</p>
+      <p>So don&rsquo;t stop. Split the same number by gender.</p>
+      <button class="btn" id="splitbtn" type="button" aria-pressed="false">Split by gender</button>
+    </div>
+    <div>
+      <div class="chart split" id="aargauChart" data-base="1"
+        data-chart='[["Aargau*",19.5,"y","fem"],["",19.5,"y","mal"]]'></div>
+      <p class="note">*Aargau values estimated from charts. Women about 22.3%, men about 17.0%.</p>
+    </div>
+  </div>
+
+  <div class="wrap" style="margin-top:72px">
+    <h2 style="font-size:clamp(30px,4vw,48px)">One number. Two realities.</h2>
+    <p>Women are at around 22.3 percent, about the level of women in Ticino. Men are at around 17.0, the lowest of any group we looked at. The gap of more than five points is almost exactly the Swiss gap of 5.7. The low total is two very different realities averaged into one comfortable-looking number.</p>
+    <p>Why would Aargau&rsquo;s women carry more? We cannot prove it, but the context points somewhere.</p>
+    <div class="stats">
+      <div class="stat"><div class="n">3 in 4</div><p>working mothers in Switzerland work part-time</p></div>
+      <div class="stat"><div class="n">~60%</div><p>of all unpaid work in Switzerland is done by women</p></div>
+      <div class="stat"><div class="n">52%</div><p>of Aargau couples split roles the traditional way: she part-time, he full-time</p></div>
+    </div>
+    <p>The canton&rsquo;s own studies describe gaps in childcare: few places and low use. Fewer paid hours do not mean fewer hours of work. For many women it can mean two jobs. This is a hypothesis, not a finding.</p>
+    <p class="note">The 52% figure is older data (about 2018&ndash;19).</p>
+    <p style="font-size:24px;font-weight:800;letter-spacing:-.02em;max-width:34ch;margin-top:32px"><span class="mark">Aargau isn&rsquo;t special.</span> It is the Swiss pattern, visible once you split the average.</p>
+  </div>
+</section>
+
+<section class="s dark" id="limits">
+  <div class="wrap">
+    <h2>Being honest about the data</h2>
+    <ol class="limits">
+      <li>Our Aargau figures are estimates read from charts. Exact numbers were not available.</li>
+      <li>All figures are self-reported. If people don&rsquo;t say they are running on empty, part of the &ldquo;gender gap&rdquo; may be a &ldquo;who says it out loud&rdquo; gap.</li>
+      <li>The survey measures how exhausted people are, not why. Our explanations are hypotheses, not results.</li>
+      <li>Differences of one or two points: handle with care.</li>
+    </ol>
+  </div>
+</section>
+
+<section class="s" id="answer">
+  <div class="wrap">
+    <h2>So: does your postcode matter?</h2>
+    <p>Less than you&rsquo;d think, and not in the way you&rsquo;d think. Between the three cantons the spread is about six percentage points. Inside Aargau alone, between women and men, it is more than five. The gap within a canton is nearly as big as the gap between cantons.</p>
+    <p>The postcode tells us what kind of working world people live in: a pharma hub like Basel, a low-wage border economy like Ticino, a canton like Aargau where half of all couples split work the traditional way. That is where we would look next.</p>
+    <div class="chart" style="margin-top:36px" data-base="1"
+      data-chart='[["Switzerland W",23.9,"w"],["Switzerland M",18.2,"m"],["Basel-Stadt W",24.7,"w"],["Basel-Stadt M",26.0,"m"],["Ticino W",21.6,"w"],["Ticino M",19.5,"m"],["Aargau* W",22.3,"w"],["Aargau* M",17.0,"m"]]'></div>
+    <div class="legend"><span><i style="background:#000"></i>Women</span><span><i style="background:var(--men)"></i>Men</span><span>Dashed line: Swiss average 20.9%</span></div>
+    <p class="note" style="margin-top:12px">*Aargau values estimated from charts. Source: Swiss Health Survey 2022 (Obsan).</p>
+    <div class="quote" style="margin-top:72px"><span class="mark">Ask what the average is hiding.</span></div>
+    <p style="margin-top:28px">Next time someone shows you a single national number about how we&rsquo;re all doing, ask them to split it. That is usually where the truth is sitting.</p>
+  </div>
+</section>
+
+<section class="s grey sources" id="sources">
+  <div class="wrap">
+    <h2 style="font-size:34px">Sources</h2>
+    <ol>
+      <li>Obsan, Swiss Health Survey 2022: emotional exhaustion at work, cantonal reports for Basel-Stadt and Ticino. Aargau estimated from charts.</li>
+      <li>Federal Statistical Office (FSO): work stress 2012&ndash;2022; part-time work; unpaid work; median wages.</li>
+      <li>Statistisches Amt Basel-Stadt: jobs and commuters, 2023.</li>
+      <li>Ustat (Ticino) 2025: part-time work, unexplained pay gap, unpaid work; cross-border workers (Q4 2024).</li>
+      <li>Canton Aargau: studies on childcare and household models (older data).</li>
+      <li>Cost of work stress, about CHF 6.5 billion a year in lost productivity (about 1% of economic output), about CHF 10 billion including disability insurance: Job-Stress-Index, Gesundheitsf&ouml;rderung Schweiz, as reported by <a href="https://www.enableme.ch/de/artikel/burnout-die-lage-in-der-schweiz-1947">enableme, &ldquo;Burnout: die Lage in der Schweiz&rdquo;</a>, <a href="https://dievolkswirtschaft.ch/de/2018/10/infografik-11-2018/">Die Volkswirtschaft, October 2018</a> and <a href="https://www.suissephysio.ch/post/burnout-in-der-schweiz-ein-teures-problem">Physioswiss</a>. Higher estimate CHF 7.6 billion: <a href="https://www.20min.ch/story/stress-verursacht-7-6-milliarden-franken-verlust-im-jahr-329631890030">20 Minuten, 4 September 2020</a>.</li>
+      <li>World Health Organization (2019). ICD-11, QD85 Burn-out: an occupational phenomenon, resulting from chronic workplace stress that has not been successfully managed.</li>
+      <li>Maslach, C., &amp; Leiter, M. P. (2016). Understanding the burnout experience. <em>World Psychiatry</em>, 15(2). Emotional exhaustion, cynicism and reduced efficacy as the three dimensions.</li>
+      <li>Demerouti, E., et al. (2001). The job demands&ndash;resources model of burnout. <em>Journal of Applied Psychology</em>.</li>
+    </ol>
+    <p class="note">Full citations with links are in the project script.</p>
+  </div>
+</section>
+</main>
+
+<footer><div class="wrap">
+  <p><strong>Tired at Work: Does Your Postcode Matter?</strong></p>
+  <p style="margin:0">Student project for the Data Storytelling module, written by a group covering Basel-Stadt, Ticino and Aargau. Visual style inspired by FHNW. This is not an official FHNW website.</p>
+</div></footer>
+
+<script>
+(function(){
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var MAX = 30;
+
+  // five people for the hero
+  var ppl = document.getElementById('people');
+  for (var i = 0; i < 5; i++) {
+    ppl.insertAdjacentHTML('beforeend',
+      '<svg class="person' + (i === 2 ? '' : '') + '" viewBox="0 0 60 120" aria-hidden="true">' +
+      '<circle class="fill" cx="30" cy="20" r="16"/>' +
+      '<path class="fill" d="M8 118V62c0-12 9-20 22-20s22 8 22 20v56z"/></svg>');
+  }
+  var target = ppl.querySelectorAll('.person')[0];
+  setTimeout(function(){ target.classList.add('on'); }, reduce ? 0 : 500);
+
+  // build charts
+  document.querySelectorAll('.chart[data-chart]').forEach(function(el){
+    var rows = JSON.parse(el.getAttribute('data-chart'));
+    var html = '<div class="rows">';
+    rows.forEach(function(r){
+      var cls = r[2] === 'y' ? 'y' : r[2] === 'w' ? 'w' : r[2] === 'm' ? 'm' : '';
+      var extra = r[3] ? ' ' + r[3] : '';
+      html += '<div class="row' + extra + '"><div class="lab">' + r[0] + '</div><div class="track">' +
+              '<div class="bar ' + cls + '" data-v="' + r[1] + '" style="width:0"><span>' + r[1].toFixed(1) + '%</span></div></div></div>';
+    });
+    html += '</div>';
+    if (el.hasAttribute('data-base')) html += '<div class="base" aria-hidden="true"></div><div class="baselabel">Swiss average 20.9%</div>';
+    el.innerHTML = html;
+    el.querySelectorAll('.bar').forEach(function(b){ b.setAttribute('aria-label', b.parentNode.parentNode.querySelector('.lab').textContent + ' ' + b.getAttribute('data-v') + ' percent'); });
+  });
+
+  function grow(el){
+    el.classList.add('in');
+    el.querySelectorAll('.bar').forEach(function(b){
+      b.style.width = (parseFloat(b.getAttribute('data-v')) / MAX * 100) + '%';
+    });
+  }
+
+  var io = 'IntersectionObserver' in window && !reduce ? new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if (e.isIntersecting) { grow(e.target); io.unobserve(e.target); }
+    });
+  }, { threshold: .35 }) : null;
+  document.querySelectorAll('.chart').forEach(function(c){ io ? io.observe(c) : grow(c); });
+
+  // Aargau split
+  var ac = document.getElementById('aargauChart'), btn = document.getElementById('splitbtn');
+  var bars = ac.querySelectorAll('.bar');
+  var vals = { fem: 22.3, mal: 17.0 }, rowsEl = ac.querySelectorAll('.row');
+  function setSplit(on){
+    ac.classList.toggle('is-split', on);
+    btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    btn.textContent = on ? 'Show combined number' : 'Split by gender';
+    rowsEl.forEach(function(r){
+      var k = r.classList.contains('fem') ? 'fem' : 'mal';
+      var b = r.querySelector('.bar');
+      var v = on ? vals[k] : 19.5;
+      b.setAttribute('data-v', v);
+      b.firstChild.textContent = v.toFixed(1) + '%';
+      b.className = 'bar ' + (on ? (k === 'fem' ? 'w' : 'm') : 'y');
+      b.style.width = (v / MAX * 100) + '%';
+      r.querySelector('.lab').textContent = on ? (k === 'fem' ? 'Women*' : 'Men*') : (k === 'fem' ? 'Aargau*' : '');
+    });
+  }
+  btn.addEventListener('click', function(){ setSplit(!ac.classList.contains('is-split')); });
+  // split automatically once the combined bar has been seen
+  if (!reduce && 'IntersectionObserver' in window) {
+    var once = new IntersectionObserver(function(es){
+      es.forEach(function(e){ if (e.isIntersecting) { setTimeout(function(){ setSplit(true); }, 2600); once.disconnect(); } });
+    }, { threshold: .6 });
+    once.observe(ac);
+  }
+
+  // photo placeholders: preview only, nothing is uploaded or stored
+  document.querySelectorAll('.photo input').forEach(function(inp){
+    inp.addEventListener('change', function(){
+      var f = inp.files && inp.files[0]; if (!f) return;
+      var box = inp.parentNode, old = box.querySelector('img'); if (old) old.remove();
+      var img = document.createElement('img'); img.alt = ''; img.src = URL.createObjectURL(f);
+      box.insertBefore(img, box.firstChild); box.classList.add('has-img');
+    });
+  });
+})();
+</script>
+</body>
+</html>
